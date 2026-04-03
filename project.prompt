@@ -1,0 +1,329 @@
+You are a senior full-stack engineer.
+
+Generate a **complete minimal working project** for a manufacturing simulation demo.
+
+The application must run locally with:
+
+Frontend: Vue 3 + Vite + Pinia + Tailwind
+Backend: FastAPI + SQLAlchemy + SQLite
+
+FastAPI must serve the compiled Vue frontend.
+
+The goal is a **simple but realistic manufacturing simulation** for a company that builds custom electric go-karts.
+
+Do NOT produce a giant monolithic file.
+
+Instead generate a **clean project skeleton of ~10–15 files** that can run immediately.
+
+---
+
+PROJECT STRUCTURE
+
+Create this exact structure:
+
+project/
+
+backend/
+app/
+main.py
+database.py
+models.py
+schemas.py
+services.py
+scheduler.py
+auth.py
+
+frontend/
+index.html
+vite.config.js
+
+src/
+main.js
+App.vue
+api.js
+stores.js
+
+components/
+SimulationControls.vue
+WorkOrderCreator.vue
+WorkCenterView.vue
+OperationTable.vue
+
+---
+
+APPLICATION CONCEPT
+
+The system simulates a small factory that builds electric go-karts.
+
+Users create Work Orders selecting:
+
+Frame Type:
+• Standard
+• Reinforced Off-Road
+
+Motor Type:
+• Standard Motor
+• High Torque Motor
+
+Battery:
+• Standard
+• Competition
+
+Finish:
+• Black Powder Coat
+• Red Powder Coat
+
+---
+
+MULTI-USER ISOLATION
+
+Users are anonymous.
+
+When the app loads:
+
+FastAPI endpoint `/api/init` generates:
+
+tenant_id = UUID
+
+Return a JWT containing the tenant_id.
+
+All database records must include tenant_id.
+
+All queries must filter by tenant_id.
+
+---
+
+SIMULATION TIME
+
+Each tenant has a simulated factory clock.
+
+Table: simulation_state
+
+fields:
+tenant_id
+current_day
+
+Frontend provides buttons:
+
+Advance 1 Day
+Advance 5 Days
+Advance To Next Event
+
+---
+
+MANUFACTURING MODEL
+
+Top entity:
+
+WorkOrder
+
+Creating a work order triggers:
+
+1. BOM expansion
+2. inventory allocation
+3. purchase orders for missing parts
+4. operation generation
+5. scheduling
+
+---
+
+WORK CENTERS
+
+Operations are assigned to departments.
+
+Work centers:
+
+Inventory
+Receiving
+Inspection
+Assembly
+Finishing
+Shipping
+
+---
+
+OPERATIONS
+
+Operations represent manufacturing steps.
+
+Fields:
+
+id
+tenant_id
+work_order_id
+name
+work_center
+duration_days
+scheduled_start_day
+scheduled_end_day
+status
+depends_on_operation_id
+
+Statuses:
+
+planned
+ready
+in_progress
+awaiting_completion
+complete
+
+---
+
+EXAMPLE OPERATIONS
+
+Inventory
+Pick Components
+
+Receiving
+Receive Motor
+
+Inspection
+Frame Stress Test
+Motor Torque Test
+Final QC
+
+Assembly
+Frame Assembly
+Motor Installation
+Final Assembly
+
+Finishing
+Powder Coat
+
+Shipping
+Ship Order
+
+---
+
+INSPECTION RESULTS
+
+When certain inspections complete, generate deterministic results:
+
+result = hash(work_order_id + operation_name) % 100
+
+Failures:
+
+Motor Torque Test fails if result < 10
+
+Frame Stress Test fails if result < 15
+
+If failure occurs:
+
+create a rework operation followed by a retest.
+
+Limit rework loops to one.
+
+---
+
+SCHEDULING
+
+Simple scheduling algorithm:
+
+Each work center has daily capacity.
+
+Example:
+
+Assembly: 2 operations per day
+Inspection: 2 operations per day
+Finishing: 1 per day
+
+Scheduler must:
+
+respect dependencies
+respect work center capacity
+assign start and end days
+
+---
+
+SIMULATION EXECUTION
+
+When simulation day advances:
+
+operations with scheduled_start_day <= current_day become READY
+
+operations with scheduled_end_day <= current_day become AWAITING_COMPLETION
+
+User must click COMPLETE OPERATION.
+
+---
+
+BACKEND API
+
+Implement these endpoints:
+
+POST /api/init
+
+POST /api/workorders
+
+GET /api/workorders
+
+GET /api/workcenters/{name}/operations
+
+POST /api/operations/{id}/complete
+
+POST /api/simulation/advance
+
+---
+
+FRONTEND FEATURES
+
+Dashboard showing:
+
+Simulation day
+
+Buttons:
+Advance 1 Day
+Advance 5 Days
+Advance To Next Event
+
+Pages:
+
+Create Work Order
+View Operations by Work Center
+Operation Table showing status
+
+Use Pinia store for:
+
+auth
+simulation state
+operations
+
+---
+
+CODING REQUIREMENTS
+
+Keep the implementation simple.
+
+Use SQLite database.
+
+Use SQLAlchemy models.
+
+Include comments explaining key business logic.
+
+The project should run using:
+
+backend:
+uvicorn app.main:app
+
+frontend:
+npm run dev
+
+The generated code must be minimal but functional.
+
+---
+
+OUTPUT FORMAT
+
+Output the project file-by-file.
+
+Start with backend files.
+
+Then frontend files.
+
+For each file show:
+
+FILE: path/to/file
+
+then the code block.
+
+Do not skip files.
