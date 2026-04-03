@@ -59,7 +59,7 @@
         <div
           v-for="row in swimlaneRows"
           :key="row.name"
-          class="flex border-b border-gray-100 last:border-b-0"
+          class="flex border-b border-gray-400 last:border-b-0"
         >
           <!-- Sticky label -->
           <div
