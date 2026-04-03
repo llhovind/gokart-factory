@@ -1,4 +1,5 @@
 <template>
+  <div class="flex flex-col gap-6">
   <div class="bg-white rounded-xl shadow-sm p-6">
     <h2 class="text-lg font-semibold text-gray-800 mb-5">New Work Order</h2>
 
@@ -63,36 +64,38 @@
       {{ error }}
     </div>
 
-    <!-- Work order list -->
-    <div v-if="opsStore.workOrders.length" class="mt-6">
-      <h3 class="text-sm font-semibold text-gray-600 mb-2">Open Work Orders</h3>
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="text-left text-gray-500 border-b text-xs uppercase tracking-wide">
-            <th class="pb-2">WO#</th>
-            <th class="pb-2">Frame</th>
-            <th class="pb-2">Motor</th>
-            <th class="pb-2">Battery</th>
-            <th class="pb-2">Finish</th>
-            <th class="pb-2">Current Stage</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="wo in opsStore.workOrders" :key="wo.id" class="border-b last:border-0 hover:bg-gray-50">
-            <td class="py-2 font-medium">WO-{{ wo.id }}</td>
-            <td class="py-2">{{ wo.frame_type }}</td>
-            <td class="py-2">{{ wo.motor_type }}</td>
-            <td class="py-2">{{ wo.battery }}</td>
-            <td class="py-2">{{ wo.finish }}</td>
-            <td class="py-2">
-              <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', stageBadgeClass(wo.id)]">
-                {{ stageLabel(wo.id) }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  </div>
+
+  <!-- Open Work Orders -->
+  <div v-if="opsStore.workOrders.length" class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="text-lg font-semibold text-gray-800 mb-5">Open Work Orders</h2>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-gray-500 border-b text-xs uppercase tracking-wide">
+          <th class="pb-2">WO#</th>
+          <th class="pb-2">Frame</th>
+          <th class="pb-2">Motor</th>
+          <th class="pb-2">Battery</th>
+          <th class="pb-2">Finish</th>
+          <th class="pb-2">Current Stage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="wo in opsStore.workOrders" :key="wo.id" class="border-b last:border-0 hover:bg-gray-50">
+          <td class="py-2 font-medium">WO-{{ wo.id }}</td>
+          <td class="py-2">{{ wo.frame_type }}</td>
+          <td class="py-2">{{ wo.motor_type }}</td>
+          <td class="py-2">{{ wo.battery }}</td>
+          <td class="py-2">{{ wo.finish }}</td>
+          <td class="py-2">
+            <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', stageBadgeClass(wo.id)]">
+              {{ stageLabel(wo.id) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
   </div>
 </template>
 
