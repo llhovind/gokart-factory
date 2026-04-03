@@ -47,6 +47,7 @@ class InventoryItemOut(BaseModel):
     deprecated: bool
     requires_pre_assembly_test: bool
     receive_duration_days: int | None
+    qty_on_hand: int | None
 
 
 class InventoryResponse(BaseModel):

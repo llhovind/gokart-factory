@@ -54,3 +54,4 @@ class InventoryItem(Base):
     deprecated = Column(Boolean, default=False, nullable=False)
     requires_pre_assembly_test = Column(Boolean, default=False, nullable=False)
     receive_duration_days      = Column(Integer, nullable=True)  # motors only
+    qty_on_hand                = Column(Integer, nullable=True)  # None = infinite (finishes)

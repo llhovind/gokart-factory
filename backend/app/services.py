@@ -17,29 +17,36 @@ from . import scheduler
 # ---------------------------------------------------------------------------
 
 _INVENTORY_SEED = [
-    # (category, name, requires_pre_assembly_test, receive_duration_days)
-    ("frame",   "Standard",            False, None),
-    ("frame",   "Reinforced Off-Road", True,  None),
-    ("motor",   "Standard Motor",      False, 1),
-    ("motor",   "High Torque Motor",   True,  2),
-    ("battery", "Standard",            False, None),
-    ("battery", "Competition",         False, None),
-    ("finish",  "Black Powder Coat",   False, None),
-    ("finish",  "Red Powder Coat",     False, None),
+    # (category, name, requires_pre_assembly_test, receive_duration_days, qty_on_hand)
+    ("frame",   "Standard",            False, None, 3),
+    ("frame",   "Reinforced Off-Road", True,  None, 0),
+    ("motor",   "Standard Motor",      False, 1,    3),
+    ("motor",   "High Torque Motor",   True,  2,    0),
+    ("battery", "Standard",            False, None, 3),
+    ("battery", "Competition",         True,  None, 0),
+    ("finish",  "Black Powder Coat",   False, None, None),  # infinite
+    ("finish",  "Red Powder Coat",     False, None, None),  # infinite
 ]
 
 
 def seed_inventory(db: Session) -> None:
-    """Idempotent — inserts seed items that don't already exist."""
-    for category, name, test, days in _INVENTORY_SEED:
-        exists = db.query(InventoryItem).filter_by(name=name, category=category).first()
-        if not exists:
+    """Idempotent — inserts seed items that don't already exist.
+    Also updates requires_pre_assembly_test and initializes qty_on_hand=NULL
+    rows (e.g. when the column is newly added to an existing DB)."""
+    for category, name, test, days, qty in _INVENTORY_SEED:
+        item = db.query(InventoryItem).filter_by(name=name, category=category).first()
+        if not item:
             db.add(InventoryItem(
                 name=name,
                 category=category,
                 requires_pre_assembly_test=test,
                 receive_duration_days=days,
+                qty_on_hand=qty,
             ))
+        else:
+            item.requires_pre_assembly_test = test
+            if item.qty_on_hand is None and qty is not None:
+                item.qty_on_hand = qty
     db.commit()
 
 
@@ -51,31 +58,48 @@ def _operation_templates(
     wo: WorkOrder,
     frame_item: InventoryItem,
     motor_item: InventoryItem,
+    battery_item: InventoryItem,
 ) -> list[dict]:
     """
     Return the ordered list of manufacturing operations for a given work order.
     Pre-assembly tests are included only when the part's requires_pre_assembly_test
-    flag is True. The 'depends_on' field is a name reference resolved after DB insertion.
+    flag is True. A Backorder Parts op is inserted when any stockable part has
+    qty_on_hand == 0. The 'depends_on' field is a name reference resolved after DB insertion.
     """
     include_frame_test = frame_item.requires_pre_assembly_test
     include_motor_test = motor_item.requires_pre_assembly_test
-    motor_days = motor_item.receive_duration_days or 1
 
-    ops = [
-        {"name": "Pick Components", "work_center": "Inventory",  "duration_days": 1,          "depends_on": None},
-        {"name": "Receive Motor",   "work_center": "Receiving",  "duration_days": motor_days, "depends_on": "Pick Components"},
+    backordered_items = [
+        item for item in [frame_item, motor_item, battery_item]
+        if item.qty_on_hand is not None and item.qty_on_hand == 0
     ]
+    needs_backorder = bool(backordered_items)
+
+    if needs_backorder:
+        # Duration = longest supplier lead time among backordered parts (min 1 day)
+        receive_days = max(item.receive_duration_days or 1 for item in backordered_items)
+        ops = [
+            {"name": "Backorder Parts",  "work_center": "Purchasing", "duration_days": 1,            "depends_on": None},
+            {"name": "Receive Parts",    "work_center": "Receiving",  "duration_days": receive_days, "depends_on": "Backorder Parts"},
+            {"name": "Pick Components",  "work_center": "Inventory",  "duration_days": 1,            "depends_on": "Receive Parts"},
+        ]
+        after_pick = "Pick Components"
+    else:
+        ops = [
+            {"name": "Pick Components",  "work_center": "Inventory",  "duration_days": 1, "depends_on": None},
+        ]
+        after_pick = "Pick Components"
 
     if include_frame_test:
-        ops.append({"name": "Frame Stress Test", "work_center": "Inspection", "duration_days": 1, "depends_on": "Receive Motor"})
+        ops.append({"name": "Frame Stress Test", "work_center": "Inspection", "duration_days": 1, "depends_on": after_pick})
     if include_motor_test:
-        prev = "Frame Stress Test" if include_frame_test else "Receive Motor"
+        prev = "Frame Stress Test" if include_frame_test else after_pick
         ops.append({"name": "Motor Torque Test", "work_center": "Inspection", "duration_days": 1, "depends_on": prev})
 
     last_test = (
         "Motor Torque Test" if include_motor_test
         else "Frame Stress Test" if include_frame_test
-        else "Receive Motor"
+        else after_pick
     )
 
     ops += [
@@ -138,7 +162,7 @@ def create_work_order_with_operations(
     db.add(wo)
     db.flush()  # Get wo.id
 
-    templates = _operation_templates(wo, items["frame"], items["motor"])
+    templates = _operation_templates(wo, items["frame"], items["motor"], items["battery"])
     ops: list[Operation] = []
     for tmpl in templates:
         op = Operation(
@@ -163,6 +187,14 @@ def create_work_order_with_operations(
 
     scheduler.reschedule_all(ops, current_day)
     db.commit()
+
+    # Decrement qty_on_hand for stockable parts consumed by this work order
+    for category in ("frame", "motor", "battery"):
+        item = items[category]
+        if item.qty_on_hand is not None and item.qty_on_hand > 0:
+            item.qty_on_hand -= 1
+    db.commit()
+
     db.refresh(wo)
     return wo
 

@@ -76,7 +76,7 @@ import { useOpsStore } from '../stores.js'
 import { useSimStore } from '../stores.js'
 import StatusBadge from './StatusBadge.vue'
 
-const workCenters = ['Inventory', 'Receiving', 'Inspection', 'Assembly', 'Finishing', 'Shipping']
+const workCenters = ['Inventory', 'Purchasing', 'Receiving', 'Inspection', 'Assembly', 'Finishing', 'Shipping']
 
 const opsStore = useOpsStore()
 const simStore = useSimStore()

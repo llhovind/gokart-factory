@@ -8,6 +8,7 @@
         <select v-model="form.frame_type" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="item in inventoryStore.frame" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
+        <StockBadge :qty="stockQty(inventoryStore.frame, form.frame_type)" />
       </div>
 
       <div>
@@ -15,6 +16,7 @@
         <select v-model="form.motor_type" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="item in inventoryStore.motor" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
+        <StockBadge :qty="stockQty(inventoryStore.motor, form.motor_type)" />
       </div>
 
       <div>
@@ -22,6 +24,7 @@
         <select v-model="form.battery" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option v-for="item in inventoryStore.battery" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
+        <StockBadge :qty="stockQty(inventoryStore.battery, form.battery)" />
       </div>
 
       <div>
@@ -93,8 +96,28 @@
 
 <script setup>
 import { ref, watchEffect, onMounted } from 'vue'
-import { useOpsStore } from '../stores.js'
-import { useInventoryStore } from '../stores.js'
+import { useOpsStore, useInventoryStore } from '../stores.js'
+
+// Inline component — avoids a new file for a tiny badge
+const StockBadge = {
+  props: { qty: { default: undefined } },
+  template: `
+    <span v-if="qty === null || qty === undefined" />
+    <span v-else-if="qty === 0"
+      class="inline-block mt-1 text-xs font-medium text-orange-600">
+      Backordered (+1 day)
+    </span>
+    <span v-else
+      class="inline-block mt-1 text-xs font-medium text-green-600">
+      {{ qty }} in stock
+    </span>
+  `,
+}
+
+function stockQty(items, selectedName) {
+  const item = items.find(i => i.name === selectedName)
+  return item ? item.qty_on_hand : undefined
+}
 
 const opsStore = useOpsStore()
 const inventoryStore = useInventoryStore()
@@ -141,7 +164,7 @@ async function submit() {
   try {
     const wo = await opsStore.createWorkOrder(form.value)
     lastCreated.value = wo
-    await opsStore.fetchWorkOrders()
+    await Promise.all([opsStore.fetchWorkOrders(), inventoryStore.fetchInventory()])
   } catch (e) {
     error.value = e?.response?.data?.detail ?? 'Failed to create work order'
   } finally {
