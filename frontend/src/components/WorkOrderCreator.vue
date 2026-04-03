@@ -74,7 +74,7 @@
             <th class="pb-2">Motor</th>
             <th class="pb-2">Battery</th>
             <th class="pb-2">Finish</th>
-            <th class="pb-2">Status</th>
+            <th class="pb-2">Current Stage</th>
           </tr>
         </thead>
         <tbody>
@@ -85,7 +85,9 @@
             <td class="py-2">{{ wo.battery }}</td>
             <td class="py-2">{{ wo.finish }}</td>
             <td class="py-2">
-              <span class="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">{{ wo.status }}</span>
+              <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', stageBadgeClass(wo.id)]">
+                {{ stageLabel(wo.id) }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -152,10 +154,39 @@ watchEffect(() => {
 onMounted(async () => {
   await Promise.all([
     opsStore.fetchWorkOrders(),
+    opsStore.fetchAllOps(),
     inventoryStore.fetchInventory(),
   ])
   inventoryLoading.value = false
 })
+
+// Returns the active/next operation for a work order, or null if complete
+function currentStageOp(woId) {
+  const ops = opsStore.allOperations.filter(op => op.work_order_id === woId)
+  if (!ops.length) return null
+  const active = ops.find(op => op.status === 'ready' || op.status === 'awaiting_completion')
+  if (active) return active
+  const planned = ops.find(op => op.status === 'planned')
+  if (planned) return planned
+  return null // all complete
+}
+
+function stageLabel(woId) {
+  const op = currentStageOp(woId)
+  return op ? op.name : 'Complete'
+}
+
+const STAGE_COLORS = {
+  ready:               'bg-blue-100 text-blue-700',
+  awaiting_completion: 'bg-orange-100 text-orange-700',
+  planned:             'bg-gray-100 text-gray-600',
+  complete:            'bg-green-100 text-green-700',
+}
+
+function stageBadgeClass(woId) {
+  const op = currentStageOp(woId)
+  return STAGE_COLORS[op?.status ?? 'complete']
+}
 
 async function submit() {
   loading.value = true
@@ -164,7 +195,7 @@ async function submit() {
   try {
     const wo = await opsStore.createWorkOrder(form.value)
     lastCreated.value = wo
-    await Promise.all([opsStore.fetchWorkOrders(), inventoryStore.fetchInventory()])
+    await Promise.all([opsStore.fetchWorkOrders(), opsStore.fetchAllOps(), inventoryStore.fetchInventory()])
   } catch (e) {
     error.value = e?.response?.data?.detail ?? 'Failed to create work order'
   } finally {
