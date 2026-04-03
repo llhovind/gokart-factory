@@ -35,15 +35,19 @@ const simStore = useSimStore()
 const opsStore = useOpsStore()
 const loading = ref(false)
 
+async function refreshAll() {
+  await Promise.all([
+    opsStore.fetchWorkOrders(),
+    opsStore.fetchAllOps(),
+    opsStore.fetchAllWorkCenters(),
+  ])
+}
+
 async function advance(days) {
   loading.value = true
   try {
     await simStore.advance(days)
-    // Refresh data so status changes are reflected immediately
-    await Promise.all([
-      opsStore.fetchWorkOrders(),
-      opsStore.fetchAllOps(),
-    ])
+    await refreshAll()
   } finally {
     loading.value = false
   }
@@ -53,10 +57,7 @@ async function advanceToNextEvent() {
   loading.value = true
   try {
     await simStore.advance(null, 'next_event')
-    await Promise.all([
-      opsStore.fetchWorkOrders(),
-      opsStore.fetchAllOps(),
-    ])
+    await refreshAll()
   } finally {
     loading.value = false
   }

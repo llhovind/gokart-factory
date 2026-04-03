@@ -72,15 +72,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOpsStore } from '../stores.js'
+import { useOpsStore, WORK_CENTERS } from '../stores.js'
 import { useSimStore } from '../stores.js'
 import StatusBadge from './StatusBadge.vue'
 
-const workCenters = ['Inventory', 'Purchasing', 'Receiving', 'Inspection', 'Assembly', 'Finishing', 'Shipping']
+const workCenters = WORK_CENTERS
 
 const opsStore = useOpsStore()
 const simStore = useSimStore()
-const active = ref('Assembly')
+const active = ref('Purchasing')
 const completing = ref(null)
 
 const ops = computed(() => opsStore.operationsByWorkCenter[active.value] ?? [])

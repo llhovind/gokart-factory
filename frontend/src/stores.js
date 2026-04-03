@@ -53,6 +53,11 @@ export const useSimStore = defineStore('sim', {
 })
 
 // ---------------------------------------------------------------------------
+// Ordered list of work centers matching pipeline flow
+// ---------------------------------------------------------------------------
+export const WORK_CENTERS = ['Purchasing', 'Receiving', 'Inventory', 'Assembly', 'Finishing', 'Inspection', 'Shipping']
+
+// ---------------------------------------------------------------------------
 // Operations store — work orders and per-work-center operations
 // ---------------------------------------------------------------------------
 export const useOpsStore = defineStore('ops', {
@@ -69,6 +74,9 @@ export const useOpsStore = defineStore('ops', {
     async fetchWorkCenterOps(name) {
       const res = await api.get(`/workcenters/${name}/operations`)
       this.operationsByWorkCenter[name] = res.data
+    },
+    async fetchAllWorkCenters() {
+      await Promise.all(WORK_CENTERS.map(wc => this.fetchWorkCenterOps(wc)))
     },
     async fetchAllOps() {
       const res = await api.get('/operations')

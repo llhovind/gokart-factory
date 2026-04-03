@@ -22,13 +22,17 @@
           :key="tab.id"
           @click="activeTab = tab.id"
           :class="[
-            'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+            'relative px-4 py-2 rounded-lg text-sm font-medium transition-colors',
             activeTab === tab.id
               ? 'bg-blue-600 text-white shadow'
               : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm',
           ]"
         >
           {{ tab.label }}
+          <span
+            v-if="tab.badge"
+            class="ml-1.5 bg-orange-400 text-white text-xs font-semibold rounded-full px-1.5 py-0.5"
+          >{{ tab.badge }}</span>
         </button>
       </div>
 
@@ -41,8 +45,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useAuthStore } from './stores.js'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore, useOpsStore } from './stores.js'
 import { useSimStore } from './stores.js'
 import SimulationControls from './components/SimulationControls.vue'
 import WorkOrderCreator from './components/WorkOrderCreator.vue'
@@ -51,13 +55,22 @@ import OperationTable from './components/OperationTable.vue'
 
 const authStore = useAuthStore()
 const simStore = useSimStore()
+const opsStore = useOpsStore()
 
 const activeTab = ref('create')
-const tabs = [
-  { id: 'create', label: 'Create Work Order' },
-  { id: 'workcenters', label: 'Work Centers' },
-  { id: 'operations', label: 'All Operations' },
-]
+
+const workCenterAlertCount = computed(() => {
+  return Object.values(opsStore.operationsByWorkCenter)
+    .flat()
+    .filter(op => op.status === 'awaiting_completion')
+    .length
+})
+
+const tabs = computed(() => [
+  { id: 'create', label: 'Create Work Order', badge: null },
+  { id: 'workcenters', label: 'Work Centers', badge: workCenterAlertCount.value || null },
+  { id: 'operations', label: 'All Operations', badge: null },
+])
 
 onMounted(async () => {
   // Init must complete before any authenticated request is made
