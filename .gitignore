@@ -23,6 +23,10 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 
+# Environment / secrets
+.env
+**/.env
+
 # Editor
 .vscode/
 .idea/

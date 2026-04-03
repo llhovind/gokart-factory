@@ -1,8 +1,9 @@
+import os
+
 from fastapi import Header, HTTPException, status
 from jose import JWTError, jwt
 
-# In production, load this from an environment variable
-SECRET_KEY = "gokart-secret-key"
+SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 
 

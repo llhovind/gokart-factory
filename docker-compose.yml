@@ -8,6 +8,8 @@ services:
     volumes:
       # Persist SQLite database across container restarts
       - ./data:/app/data
+    env_file:
+      - backend/.env
     environment:
       - SQLALCHEMY_DATABASE_URL=sqlite:///./data/gokart.db
     restart: unless-stopped

@@ -9,6 +9,9 @@ import os
 import pathlib
 import uuid
 
+from dotenv import load_dotenv
+load_dotenv(pathlib.Path(__file__).parent.parent / ".env")
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
