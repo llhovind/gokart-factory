@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from .database import Base
 
 
@@ -42,3 +42,15 @@ class Operation(Base):
     depends_on_operation_id = Column(Integer, nullable=True)
     # Tracks how many rework loops have been applied (capped at 1)
     rework_count = Column(Integer, default=0, nullable=False)
+
+
+class InventoryItem(Base):
+    """A part type available for use in work orders."""
+    __tablename__ = "inventory_items"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    name       = Column(String, nullable=False)
+    category   = Column(String, nullable=False)   # frame | motor | battery | finish
+    deprecated = Column(Boolean, default=False, nullable=False)
+    requires_pre_assembly_test = Column(Boolean, default=False, nullable=False)
+    receive_duration_days      = Column(Integer, nullable=True)  # motors only

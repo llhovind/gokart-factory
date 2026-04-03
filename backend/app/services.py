@@ -6,33 +6,87 @@ import hashlib
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .models import Operation, SimulationState, WorkOrder
+from fastapi import HTTPException
+from .models import InventoryItem, Operation, SimulationState, WorkOrder
 from .schemas import WorkOrderCreate
 from . import scheduler
+
+
+# ---------------------------------------------------------------------------
+# Inventory seed data
+# ---------------------------------------------------------------------------
+
+_INVENTORY_SEED = [
+    # (category, name, requires_pre_assembly_test, receive_duration_days)
+    ("frame",   "Standard",            False, None),
+    ("frame",   "Reinforced Off-Road", True,  None),
+    ("motor",   "Standard Motor",      False, 1),
+    ("motor",   "High Torque Motor",   True,  2),
+    ("battery", "Standard",            False, None),
+    ("battery", "Competition",         False, None),
+    ("finish",  "Black Powder Coat",   False, None),
+    ("finish",  "Red Powder Coat",     False, None),
+]
+
+
+def seed_inventory(db: Session) -> None:
+    """Idempotent — inserts seed items that don't already exist."""
+    for category, name, test, days in _INVENTORY_SEED:
+        exists = db.query(InventoryItem).filter_by(name=name, category=category).first()
+        if not exists:
+            db.add(InventoryItem(
+                name=name,
+                category=category,
+                requires_pre_assembly_test=test,
+                receive_duration_days=days,
+            ))
+    db.commit()
 
 
 # ---------------------------------------------------------------------------
 # Operation template for a work order
 # ---------------------------------------------------------------------------
 
-def _operation_templates(wo: WorkOrder) -> list[dict]:
+def _operation_templates(
+    wo: WorkOrder,
+    frame_item: InventoryItem,
+    motor_item: InventoryItem,
+) -> list[dict]:
     """
     Return the ordered list of manufacturing operations for a given work order.
-    The 'depends_on' field is a name reference resolved after DB insertion.
+    Pre-assembly tests are included only when the part's requires_pre_assembly_test
+    flag is True. The 'depends_on' field is a name reference resolved after DB insertion.
     """
-    motor_days = 2 if wo.motor_type == "High Torque Motor" else 1
-    return [
-        {"name": "Pick Components",    "work_center": "Inventory",   "duration_days": 1,          "depends_on": None},
-        {"name": "Receive Motor",       "work_center": "Receiving",   "duration_days": motor_days, "depends_on": "Pick Components"},
-        {"name": "Frame Stress Test",   "work_center": "Inspection",  "duration_days": 1,          "depends_on": "Receive Motor"},
-        {"name": "Motor Torque Test",   "work_center": "Inspection",  "duration_days": 1,          "depends_on": "Frame Stress Test"},
-        {"name": "Frame Assembly",      "work_center": "Assembly",    "duration_days": 2,          "depends_on": "Motor Torque Test"},
-        {"name": "Motor Installation",  "work_center": "Assembly",    "duration_days": 1,          "depends_on": "Frame Assembly"},
-        {"name": "Final Assembly",      "work_center": "Assembly",    "duration_days": 2,          "depends_on": "Motor Installation"},
-        {"name": "Powder Coat",         "work_center": "Finishing",   "duration_days": 1,          "depends_on": "Final Assembly"},
-        {"name": "Final QC",            "work_center": "Inspection",  "duration_days": 1,          "depends_on": "Powder Coat"},
-        {"name": "Ship Order",          "work_center": "Shipping",    "duration_days": 1,          "depends_on": "Final QC"},
+    include_frame_test = frame_item.requires_pre_assembly_test
+    include_motor_test = motor_item.requires_pre_assembly_test
+    motor_days = motor_item.receive_duration_days or 1
+
+    ops = [
+        {"name": "Pick Components", "work_center": "Inventory",  "duration_days": 1,          "depends_on": None},
+        {"name": "Receive Motor",   "work_center": "Receiving",  "duration_days": motor_days, "depends_on": "Pick Components"},
     ]
+
+    if include_frame_test:
+        ops.append({"name": "Frame Stress Test", "work_center": "Inspection", "duration_days": 1, "depends_on": "Receive Motor"})
+    if include_motor_test:
+        prev = "Frame Stress Test" if include_frame_test else "Receive Motor"
+        ops.append({"name": "Motor Torque Test", "work_center": "Inspection", "duration_days": 1, "depends_on": prev})
+
+    last_test = (
+        "Motor Torque Test" if include_motor_test
+        else "Frame Stress Test" if include_frame_test
+        else "Receive Motor"
+    )
+
+    ops += [
+        {"name": "Frame Assembly",     "work_center": "Assembly",   "duration_days": 2, "depends_on": last_test},
+        {"name": "Motor Installation", "work_center": "Assembly",   "duration_days": 1, "depends_on": "Frame Assembly"},
+        {"name": "Final Assembly",     "work_center": "Assembly",   "duration_days": 2, "depends_on": "Motor Installation"},
+        {"name": "Powder Coat",        "work_center": "Finishing",  "duration_days": 1, "depends_on": "Final Assembly"},
+        {"name": "Final QC",           "work_center": "Inspection", "duration_days": 1, "depends_on": "Powder Coat"},
+        {"name": "Ship Order",         "work_center": "Shipping",   "duration_days": 1, "depends_on": "Final QC"},
+    ]
+    return ops
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +107,25 @@ def create_work_order_with_operations(
     5. Schedule all ops
     6. Commit and return
     """
+    # Validate and retrieve inventory items (raises 422 if unknown or deprecated)
+    checks = [
+        ("frame",   data.frame_type),
+        ("motor",   data.motor_type),
+        ("battery", data.battery),
+        ("finish",  data.finish),
+    ]
+    items: dict[str, InventoryItem] = {}
+    for category, name in checks:
+        item = db.query(InventoryItem).filter_by(
+            category=category, name=name, deprecated=False
+        ).first()
+        if not item:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Unknown or unavailable {category}: '{name}'"
+            )
+        items[category] = item
+
     wo = WorkOrder(
         tenant_id=tenant_id,
         frame_type=data.frame_type,
@@ -65,7 +138,7 @@ def create_work_order_with_operations(
     db.add(wo)
     db.flush()  # Get wo.id
 
-    templates = _operation_templates(wo)
+    templates = _operation_templates(wo, items["frame"], items["motor"])
     ops: list[Operation] = []
     for tmpl in templates:
         op = Operation(
@@ -127,7 +200,6 @@ def complete_operation(db: Session, op_id: int, tenant_id: str) -> Operation:
         .first()
     )
     if not op:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Operation not found")
 
     op.status = "complete"
@@ -254,7 +326,6 @@ def advance_simulation(
     """
     sim = db.query(SimulationState).filter_by(tenant_id=tenant_id).first()
     if not sim:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Simulation state not found")
 
     if mode == "next_event":

@@ -5,40 +5,36 @@
     <form @submit.prevent="submit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Frame Type</label>
-        <select v-model="form.frame_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Standard</option>
-          <option>Reinforced Off-Road</option>
+        <select v-model="form.frame_type" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option v-for="item in inventoryStore.frame" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Motor Type</label>
-        <select v-model="form.motor_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Standard Motor</option>
-          <option>High Torque Motor</option>
+        <select v-model="form.motor_type" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option v-for="item in inventoryStore.motor" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Battery</label>
-        <select v-model="form.battery" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Standard</option>
-          <option>Competition</option>
+        <select v-model="form.battery" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option v-for="item in inventoryStore.battery" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Finish</label>
-        <select v-model="form.finish" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option>Black Powder Coat</option>
-          <option>Red Powder Coat</option>
+        <select v-model="form.finish" :disabled="inventoryLoading" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option v-for="item in inventoryStore.finish" :key="item.id" :value="item.name">{{ item.name }}</option>
         </select>
       </div>
 
       <div class="sm:col-span-2">
         <button
           type="submit"
-          :disabled="loading"
+          :disabled="loading || inventoryLoading"
           class="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           {{ loading ? 'Creating…' : 'Create Work Order' }}
@@ -96,22 +92,47 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import { useOpsStore } from '../stores.js'
+import { useInventoryStore } from '../stores.js'
 
 const opsStore = useOpsStore()
+const inventoryStore = useInventoryStore()
 const loading = ref(false)
+const inventoryLoading = ref(true)
 const error = ref(null)
 const lastCreated = ref(null)
 
 const form = ref({
-  frame_type: 'Standard',
-  motor_type: 'Standard Motor',
-  battery: 'Standard',
-  finish: 'Black Powder Coat',
+  frame_type: '',
+  motor_type: '',
+  battery: '',
+  finish: '',
 })
 
-onMounted(() => opsStore.fetchWorkOrders())
+// Reset form field to first available item if the current selection is no longer in inventory
+// (handles deprecations without requiring a page reload)
+watchEffect(() => {
+  const fields = [
+    { key: 'frame_type', items: inventoryStore.frame },
+    { key: 'motor_type', items: inventoryStore.motor },
+    { key: 'battery',    items: inventoryStore.battery },
+    { key: 'finish',     items: inventoryStore.finish },
+  ]
+  for (const { key, items } of fields) {
+    if (items.length && !items.some(i => i.name === form.value[key])) {
+      form.value[key] = items[0].name
+    }
+  }
+})
+
+onMounted(async () => {
+  await Promise.all([
+    opsStore.fetchWorkOrders(),
+    inventoryStore.fetchInventory(),
+  ])
+  inventoryLoading.value = false
+})
 
 async function submit() {
   loading.value = true

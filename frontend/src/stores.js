@@ -85,3 +85,21 @@ export const useOpsStore = defineStore('ops', {
     },
   },
 })
+
+// ---------------------------------------------------------------------------
+// Inventory store — available (non-deprecated) part types grouped by category
+// ---------------------------------------------------------------------------
+export const useInventoryStore = defineStore('inventory', {
+  state: () => ({
+    frame: [],
+    motor: [],
+    battery: [],
+    finish: [],
+  }),
+  actions: {
+    async fetchInventory() {
+      const res = await api.get('/inventory')
+      Object.assign(this, res.data)
+    },
+  },
+})

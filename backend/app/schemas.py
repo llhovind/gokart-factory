@@ -38,6 +38,24 @@ class WorkOrderOut(BaseModel):
     created_day: int
 
 
+class InventoryItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    category: str
+    deprecated: bool
+    requires_pre_assembly_test: bool
+    receive_duration_days: int | None
+
+
+class InventoryResponse(BaseModel):
+    frame: list[InventoryItemOut]
+    motor: list[InventoryItemOut]
+    battery: list[InventoryItemOut]
+    finish: list[InventoryItemOut]
+
+
 class OperationOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

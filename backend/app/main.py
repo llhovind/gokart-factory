@@ -19,11 +19,12 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from .auth import create_token, get_current_tenant_id
-from .database import Base, engine, get_db
-from .models import Operation, SimulationState, WorkOrder
+from .database import Base, SessionLocal, engine, get_db
+from .models import InventoryItem, Operation, SimulationState, WorkOrder
 from .schemas import (
     AdvanceRequest,
     InitResponse,
+    InventoryResponse,
     OperationOut,
     SimulationStateOut,
     WorkOrderCreate,
@@ -46,6 +47,11 @@ app.add_middleware(
 @app.on_event("startup")
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        services.seed_inventory(db)
+    finally:
+        db.close()
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +157,20 @@ def complete_operation(
     tenant_id: str = Depends(get_current_tenant_id),
 ):
     return services.complete_operation(db, op_id, tenant_id)
+
+
+# ---------------------------------------------------------------------------
+# Inventory
+# ---------------------------------------------------------------------------
+
+@app.get("/api/inventory", response_model=InventoryResponse)
+def get_inventory(db: Session = Depends(get_db)):
+    """Non-deprecated inventory items grouped by category. No auth required."""
+    items = db.query(InventoryItem).filter_by(deprecated=False).all()
+    grouped: dict[str, list] = {"frame": [], "motor": [], "battery": [], "finish": []}
+    for item in items:
+        grouped[item.category].append(item)
+    return grouped
 
 
 # ---------------------------------------------------------------------------
