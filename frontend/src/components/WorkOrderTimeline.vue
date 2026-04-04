@@ -78,7 +78,7 @@
             <span class="text-xs font-semibold text-gray-700">WO-{{ row.woId }}</span>
             <span
               class="text-xs leading-tight font-medium"
-              :class="row.pipelineType === 'Critical' ? 'text-orange-500' : 'text-gray-400'"
+              :class="row.pipelineType === 'IQC Required' ? 'text-orange-500' : 'text-gray-400'"
             >{{ row.pipelineType }}</span>
           </div>
 
@@ -208,7 +208,7 @@ const woRows = computed(() => {
     const ops = scheduledOps.value.filter(op => op.work_order_id === woId)
 
     const isCritical = ops.some(op => IQC_OPS.has(op.name))
-    const pipelineType = isCritical ? 'Critical' : 'Standard'
+    const pipelineType = isCritical ? 'IQC Required' : 'Standard'
 
     // Greedy swimlane assignment (handles rework ops that may overlap)
     const lanes = []
