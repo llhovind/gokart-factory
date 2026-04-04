@@ -18,6 +18,8 @@ CAPACITIES: dict[str, int] = {
     "Assembly": 2,
     "Inspection": 2,
     "Finishing": 1,
+    "IQC": 2,
+    "Receiving": 3,
 }
 _UNLIMITED = 999
 
