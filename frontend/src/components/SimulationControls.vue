@@ -23,6 +23,13 @@
       Next Event
     </button>
     <span v-if="loading" class="text-xs text-gray-400 ml-2">Advancing…</span>
+    <button
+      @click="restart()"
+      :disabled="loading"
+      class="ml-auto px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+    >
+      Restart
+    </button>
   </div>
 </template>
 
@@ -30,9 +37,11 @@
 import { ref } from 'vue'
 import { useSimStore } from '../stores.js'
 import { useOpsStore } from '../stores.js'
+import { useAuthStore } from '../stores.js'
 
 const simStore = useSimStore()
 const opsStore = useOpsStore()
+const authStore = useAuthStore()
 const loading = ref(false)
 
 async function refreshAll() {
@@ -57,6 +66,18 @@ async function advanceToNextEvent() {
   loading.value = true
   try {
     await simStore.advance(null, 'next_event')
+    await refreshAll()
+  } finally {
+    loading.value = false
+  }
+}
+
+async function restart() {
+  loading.value = true
+  try {
+    authStore.clearToken()
+    await authStore.init()
+    await simStore.fetchState()
     await refreshAll()
   } finally {
     loading.value = false
