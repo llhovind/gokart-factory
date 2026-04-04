@@ -37,11 +37,13 @@
       </div>
 
       <!-- Tab content -->
-      <WorkOrderCreator v-if="activeTab === 'create'" />
-      <WorkCenterView v-else-if="activeTab === 'workcenters'" />
-      <OperationTable v-else-if="activeTab === 'operations'" />
-      <FactoryTimeline v-else-if="activeTab === 'timeline'" />
-      <WorkOrderTimeline v-else-if="activeTab === 'wo-timeline'" />
+      <template v-if="ready">
+        <WorkOrderCreator v-if="activeTab === 'create'" />
+        <WorkCenterView v-else-if="activeTab === 'workcenters'" />
+        <OperationTable v-else-if="activeTab === 'operations'" />
+        <FactoryTimeline v-else-if="activeTab === 'timeline'" />
+        <WorkOrderTimeline v-else-if="activeTab === 'wo-timeline'" />
+      </template>
     </div>
   </div>
 </template>
@@ -62,6 +64,7 @@ const simStore = useSimStore()
 const opsStore = useOpsStore()
 
 const activeTab = ref('create')
+const ready = ref(false)
 
 const workCenterAlertCount = computed(() => {
   return Object.values(opsStore.operationsByWorkCenter)
@@ -82,5 +85,6 @@ onMounted(async () => {
   // Init must complete before any authenticated request is made
   await authStore.init()
   await simStore.fetchState()
+  ready.value = true
 })
 </script>
