@@ -41,6 +41,7 @@
       <WorkCenterView v-else-if="activeTab === 'workcenters'" />
       <OperationTable v-else-if="activeTab === 'operations'" />
       <FactoryTimeline v-else-if="activeTab === 'timeline'" />
+      <WorkOrderTimeline v-else-if="activeTab === 'wo-timeline'" />
     </div>
   </div>
 </template>
@@ -54,6 +55,7 @@ import WorkOrderCreator from './components/WorkOrderCreator.vue'
 import WorkCenterView from './components/WorkCenterView.vue'
 import OperationTable from './components/OperationTable.vue'
 import FactoryTimeline from './components/FactoryTimeline.vue'
+import WorkOrderTimeline from './components/WorkOrderTimeline.vue'
 
 const authStore = useAuthStore()
 const simStore = useSimStore()
@@ -73,6 +75,7 @@ const tabs = computed(() => [
   { id: 'workcenters', label: 'Work Centers', badge: workCenterAlertCount.value || null },
   { id: 'operations', label: 'All Operations', badge: null },
   { id: 'timeline', label: 'Factory Timeline', badge: null },
+  { id: 'wo-timeline', label: 'Work Order Timeline', badge: null },
 ])
 
 onMounted(async () => {
