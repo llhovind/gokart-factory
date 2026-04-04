@@ -1,4 +1,4 @@
-# Gokart Factory
+# GoKart Factory
 
 A manufacturing simulation for a custom electric go-kart factory.
 
@@ -54,6 +54,7 @@ SQLite database is persisted to `./data/gokart.db` via a Docker volume.
 2. **Create a Work Order** — pick frame, motor, battery, and finish options. The backend expands this into 10 manufacturing operations and schedules them.
 3. **Advance time** — use the +1 Day, +5 Days, or "Next Event" buttons to move the factory clock forward. Operations transition: `planned → ready → awaiting_completion`.
 4. **Complete operations** — go to the Work Centers tab and click "Complete" on any `Awaiting` operation. Inspection operations run a deterministic failure check; failures insert a rework + retest pair and reschedule.
+5. **View timelines** — the Work Order Timeline shows per-order operation schedules; the Factory Timeline displays a Gantt chart of all work orders across work centers.
 
 ---
 
@@ -81,6 +82,8 @@ gokart-factory/
 │   │       ├── WorkOrderCreator.vue
 │   │       ├── WorkCenterView.vue
 │   │       ├── OperationTable.vue
+│   │       ├── WorkOrderTimeline.vue
+│   │       ├── FactoryTimeline.vue
 │   │       └── StatusBadge.vue
 │   └── ...
 ├── Dockerfile

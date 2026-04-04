@@ -32,7 +32,7 @@ from .schemas import (
 )
 from . import services
 
-app = FastAPI(title="Gokart Factory")
+app = FastAPI(title="GoKart Factory")
 
 # CORS — only relevant when Vite dev server (5173) calls FastAPI (8000)
 app.add_middleware(

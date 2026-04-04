@@ -4,7 +4,7 @@
     <nav class="bg-blue-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
       <div class="flex items-center gap-3">
         <span class="text-2xl">⚡</span>
-        <h1 class="text-xl font-bold tracking-tight">Gokart Factory</h1>
+        <h1 class="text-xl font-bold tracking-tight">GoKart Factory</h1>
       </div>
       <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">
         Day {{ simStore.currentDay }}
