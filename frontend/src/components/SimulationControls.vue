@@ -40,6 +40,13 @@
       visit <em>Work Centers</em> to complete operations as they become ready →
       use the timeline tabs to visualize the production schedule.
     </p>
+    <p class="text-xs text-gray-400 leading-relaxed">
+      <strong class="text-gray-500">Capacity limits:</strong>
+      Each work center can only process a fixed number of operations per day —
+      <em>Assembly</em> and <em>Inspection</em> handle up to 2, <em>IQC</em> up to 2, <em>Finishing</em> up to 1, and <em>Receiving</em> up to 3.
+      When multiple work orders compete for the same station, operations queue up and scheduled dates shift out automatically.
+      Create several concurrent work orders with stress-test or backordered configurations to see this effect on the timeline.
+    </p>
   </div>
 </template>
 
