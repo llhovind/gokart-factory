@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6">
   <div class="bg-white rounded-xl shadow-sm p-6">
-    <h2 class="text-lg font-semibold text-gray-800 mb-5">New Work Order</h2>
+    <h2 class="text-lg font-semibold text-gray-800 mb-5">Create New Work Order</h2>
 
     <form @submit.prevent="submit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
@@ -67,9 +67,10 @@
   </div>
 
   <!-- Open Work Orders -->
-  <div v-if="opsStore.workOrders.length" class="bg-white rounded-xl shadow-sm p-6">
+  <div class="bg-white rounded-xl shadow-sm p-6">
     <h2 class="text-lg font-semibold text-gray-800 mb-5">Open Work Orders</h2>
-    <table class="w-full text-sm">
+    <p v-if="!opsStore.workOrders.length" class="text-sm text-gray-500">No open work orders.</p>
+    <table v-else class="w-full text-sm">
       <thead>
         <tr class="text-left text-gray-500 border-b text-xs uppercase tracking-wide">
           <th class="pb-2">WO#</th>

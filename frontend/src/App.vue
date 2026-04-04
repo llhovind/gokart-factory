@@ -74,7 +74,7 @@ const workCenterAlertCount = computed(() => {
 })
 
 const tabs = computed(() => [
-  { id: 'create', label: 'Create Work Order', badge: null },
+  { id: 'create', label: 'Work Orders', badge: null },
   { id: 'workcenters', label: 'Work Centers', badge: workCenterAlertCount.value || null },
   { id: 'operations', label: 'All Operations', badge: null },
   { id: 'timeline', label: 'Factory Timeline', badge: null },
