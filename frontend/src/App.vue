@@ -13,10 +13,11 @@
 
     <div class="max-w-6xl mx-auto p-6">
       <!-- Simulation controls always visible -->
-      <SimulationControls class="mb-6" />
+      <SimulationControls class="mb-4" />
+      <div class="h-1 bg-indigo-500 rounded-full mb-6" />
 
       <!-- Tab navigation -->
-      <div class="flex gap-2 mb-6">
+      <div class="flex gap-2 mt-12 mb-6">
         <button
           v-for="tab in tabs"
           :key="tab.id"

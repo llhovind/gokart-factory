@@ -1,35 +1,45 @@
 <template>
-  <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap items-center gap-3">
-    <span class="text-sm font-medium text-gray-500 mr-2">Advance time:</span>
-    <button
-      @click="advance(1)"
-      :disabled="loading"
-      class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-    >
-      +1 Day
-    </button>
-    <button
-      @click="advance(5)"
-      :disabled="loading"
-      class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-    >
-      +5 Days
-    </button>
-    <button
-      @click="advanceToNextEvent()"
-      :disabled="loading"
-      class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-    >
-      Next Event
-    </button>
-    <span v-if="loading" class="text-xs text-gray-400 ml-2">Advancing…</span>
-    <button
-      @click="restart()"
-      :disabled="loading"
-      class="ml-auto px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-    >
-      Restart
-    </button>
+  <div class="bg-white rounded-xl shadow-sm p-4 flex flex-col gap-3">
+    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Simulation Controls</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="text-sm font-medium text-gray-500 mr-2">Advance time:</span>
+      <button
+        @click="advance(1)"
+        :disabled="loading"
+        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+      >
+        +1 Day
+      </button>
+      <button
+        @click="advance(5)"
+        :disabled="loading"
+        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+      >
+        +5 Days
+      </button>
+      <button
+        @click="advanceToNextEvent()"
+        :disabled="loading"
+        class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+      >
+        Next Event
+      </button>
+      <span v-if="loading" class="text-xs text-gray-400 ml-2">Advancing…</span>
+      <button
+        @click="restart()"
+        :disabled="loading"
+        class="ml-auto px-4 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+      >
+        Start Over
+      </button>
+    </div>
+    <p class="text-xs text-gray-400 leading-relaxed">
+      <strong class="text-gray-500">Getting started:</strong>
+      Create a work order on the <em>Work Orders</em> tab →
+      advance time with the buttons above →
+      visit <em>Work Centers</em> to complete operations as they become ready →
+      use the timeline tabs to visualize the production schedule.
+    </p>
   </div>
 </template>
 
