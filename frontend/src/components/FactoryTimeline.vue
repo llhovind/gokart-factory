@@ -75,7 +75,7 @@
               minHeight: rowHeight(row) + 'px',
             }"
           >
-            <span class="text-xs font-semibold text-gray-600 leading-tight">{{ row.name }}</span>
+            <span class="text-xs font-semibold text-gray-600 leading-tight">{{ wcLabel(row.name) }}</span>
           </div>
 
           <!-- Lanes area -->
@@ -145,7 +145,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOpsStore, useSimStore, WORK_CENTERS } from '../stores.js'
+import { useOpsStore, useSimStore, WORK_CENTERS, wcLabel } from '../stores.js'
 
 const DAY_WIDTH = 40
 const LANE_HEIGHT = 32

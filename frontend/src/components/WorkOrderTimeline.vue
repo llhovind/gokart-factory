@@ -133,7 +133,7 @@
         :style="{ left: tooltip.x + 'px', top: (tooltip.y - 80) + 'px' }"
       >
         <div class="font-semibold">{{ tooltip.op.name }}</div>
-        <div class="text-gray-300">{{ tooltip.op.work_center }}</div>
+        <div class="text-gray-300">{{ wcLabel(tooltip.op.work_center) }}</div>
         <div class="text-gray-300">Day {{ tooltip.op.scheduled_start_day }} &rarr; {{ tooltip.op.scheduled_end_day }}</div>
         <div v-if="tooltip.op.actual_completion_day && tooltip.op.actual_completion_day !== tooltip.op.scheduled_end_day" class="text-yellow-300">
           Completed Day {{ tooltip.op.actual_completion_day }}
@@ -149,7 +149,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOpsStore, useSimStore } from '../stores.js'
+import { useOpsStore, useSimStore, wcLabel } from '../stores.js'
 
 const DAY_WIDTH = 40
 const LANE_HEIGHT = 32
@@ -163,7 +163,7 @@ const STATUS_CLASSES = {
   complete:            'bg-green-500 text-white border border-green-700',
 }
 
-const PRE_TEST_OPS = new Set(['Frame Stress Test', 'Motor Torque Test'])
+const IQC_OPS = new Set(['Frame Stress Test', 'Motor Torque Test'])
 
 const opsStore = useOpsStore()
 const simStore = useSimStore()
@@ -207,7 +207,7 @@ const woRows = computed(() => {
   return woIds.map(woId => {
     const ops = scheduledOps.value.filter(op => op.work_order_id === woId)
 
-    const isCritical = ops.some(op => PRE_TEST_OPS.has(op.name))
+    const isCritical = ops.some(op => IQC_OPS.has(op.name))
     const pipelineType = isCritical ? 'Critical' : 'Standard'
 
     // Greedy swimlane assignment (handles rework ops that may overlap)

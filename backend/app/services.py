@@ -91,10 +91,10 @@ def _operation_templates(
         after_pick = "Pick Components"
 
     if include_frame_test:
-        ops.append({"name": "Frame Stress Test", "work_center": "Pre-Test", "duration_days": 1, "depends_on": after_pick})
+        ops.append({"name": "Frame Stress Test", "work_center": "IQC", "duration_days": 1, "depends_on": after_pick})
     if include_motor_test:
         prev = "Frame Stress Test" if include_frame_test else after_pick
-        ops.append({"name": "Motor Torque Test", "work_center": "Pre-Test", "duration_days": 1, "depends_on": prev})
+        ops.append({"name": "Motor Torque Test", "work_center": "IQC", "duration_days": 1, "depends_on": prev})
 
     last_test = (
         "Motor Torque Test" if include_motor_test

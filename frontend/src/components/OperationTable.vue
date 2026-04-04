@@ -54,7 +54,7 @@
             <td class="py-2 text-gray-400 text-xs">{{ op.id }}</td>
             <td class="py-2 font-medium">WO-{{ op.work_order_id }}</td>
             <td class="py-2">{{ op.name }}</td>
-            <td class="py-2 text-gray-500">{{ op.work_center }}</td>
+            <td class="py-2 text-gray-500">{{ wcLabel(op.work_center) }}</td>
             <td class="py-2 text-gray-500">{{ op.scheduled_start_day != null ? `Day ${op.scheduled_start_day}` : '—' }}</td>
             <td class="py-2 text-gray-500">{{ op.scheduled_end_day != null ? `Day ${op.scheduled_end_day}` : '—' }}</td>
             <td class="py-2">
@@ -69,7 +69,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOpsStore } from '../stores.js'
+import { useOpsStore, wcLabel } from '../stores.js'
 import StatusBadge from './StatusBadge.vue'
 
 const opsStore = useOpsStore()

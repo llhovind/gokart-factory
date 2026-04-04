@@ -15,7 +15,7 @@
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
         ]"
       >
-        {{ wc }}
+        {{ wcLabel(wc) }}
         <span
           v-if="pendingCount(wc) > 0"
           class="ml-1.5 bg-orange-400 text-white text-xs rounded-full px-1.5 py-0.5"
@@ -72,7 +72,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useOpsStore, WORK_CENTERS } from '../stores.js'
+import { useOpsStore, WORK_CENTERS, wcLabel } from '../stores.js'
 import { useSimStore } from '../stores.js'
 import StatusBadge from './StatusBadge.vue'
 
