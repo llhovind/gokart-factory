@@ -190,6 +190,11 @@ def flush_db(
     db.query(Operation).delete()
     db.query(WorkOrder).delete()
     db.query(SimulationState).delete()
+    # Reset qty_on_hand to seed values (decremented during work order creation)
+    for category, name, _test, _days, qty in services._INVENTORY_SEED:
+        item = db.query(InventoryItem).filter_by(name=name, category=category).first()
+        if item is not None:
+            item.qty_on_hand = qty
     db.commit()
     return {"flushed": True}
 
