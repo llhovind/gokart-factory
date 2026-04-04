@@ -55,7 +55,7 @@ export const useSimStore = defineStore('sim', {
 // ---------------------------------------------------------------------------
 // Ordered list of work centers matching pipeline flow
 // ---------------------------------------------------------------------------
-export const WORK_CENTERS = ['Purchasing', 'Receiving', 'Inventory', 'Assembly', 'Finishing', 'Inspection', 'Shipping']
+export const WORK_CENTERS = ['Purchasing', 'Receiving', 'Inventory', 'Pre-Test', 'Assembly', 'Finishing', 'Inspection', 'Shipping']
 
 // ---------------------------------------------------------------------------
 // Operations store — work orders and per-work-center operations
