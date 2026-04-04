@@ -12,7 +12,7 @@ import uuid
 from dotenv import load_dotenv
 load_dotenv(pathlib.Path(__file__).parent.parent / ".env")
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +31,8 @@ from .schemas import (
     WorkOrderOut,
 )
 from . import services
+
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "dev-admin-key")
 
 app = FastAPI(title="GoKart Factory")
 
@@ -171,6 +173,25 @@ def get_inventory(db: Session = Depends(get_db)):
     for item in items:
         grouped[item.category].append(item)
     return grouped
+
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+
+@app.post("/api/admin/flush")
+def flush_db(
+    x_admin_key: str = Header(...),
+    db: Session = Depends(get_db),
+):
+    """Delete all tenant data. Protected by X-Admin-Key header, not a tenant JWT."""
+    if x_admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    db.query(Operation).delete()
+    db.query(WorkOrder).delete()
+    db.query(SimulationState).delete()
+    db.commit()
+    return {"flushed": True}
 
 
 # ---------------------------------------------------------------------------

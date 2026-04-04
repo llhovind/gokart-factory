@@ -84,7 +84,18 @@ const tabs = computed(() => [
 onMounted(async () => {
   // Init must complete before any authenticated request is made
   await authStore.init()
-  await simStore.fetchState()
+  try {
+    await simStore.fetchState()
+  } catch (error) {
+    if (error.response?.status === 404) {
+      // Stale tenant after a DB flush — create a fresh session
+      authStore.clearToken()
+      await authStore.init()
+      await simStore.fetchState()
+    } else {
+      throw error
+    }
+  }
   ready.value = true
 })
 </script>

@@ -29,6 +29,11 @@ export const useAuthStore = defineStore('auth', {
         await this.init()
       }
     },
+    clearToken() {
+      localStorage.removeItem('gokart_token')
+      this.token = null
+      this.tenantId = null
+    },
   },
 })
 
