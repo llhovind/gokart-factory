@@ -71,3 +71,4 @@ class OperationOut(BaseModel):
     status: str
     depends_on_operation_id: int | None
     rework_count: int
+    actual_completion_day: int | None

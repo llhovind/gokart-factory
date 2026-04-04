@@ -234,9 +234,11 @@ def complete_operation(db: Session, op_id: int, tenant_id: str) -> Operation:
     if not op:
         raise HTTPException(status_code=404, detail="Operation not found")
 
-    op.status = "complete"
+    sim = db.query(SimulationState).filter_by(tenant_id=tenant_id).first()
+    current_day = sim.current_day if sim else 1
 
-    rework_added = False
+    op.status = "complete"
+    op.actual_completion_day = current_day
 
     if op.name in _INSPECTION_OPS and op.rework_count < 1:
         result = _inspection_result(op.work_order_id, op.name)
@@ -284,17 +286,10 @@ def complete_operation(db: Session, op_id: int, tenant_id: str) -> Operation:
             if next_op:
                 next_op.depends_on_operation_id = retest_op.id
 
-            rework_added = True
-
-    if rework_added:
-        # Re-schedule all non-complete ops so the rework fits into capacity
-        sim = db.query(SimulationState).filter_by(tenant_id=tenant_id).first()
-        all_live_ops = (
-            db.query(Operation)
-            .filter(Operation.tenant_id == tenant_id, Operation.status != "complete")
-            .all()
-        )
-        scheduler.reschedule_all(all_live_ops, sim.current_day if sim else 1)
+    # Always reschedule — actual completion day may differ from scheduled,
+    # so downstream operations need to be pushed forward or pulled in accordingly.
+    all_ops = db.query(Operation).filter(Operation.tenant_id == tenant_id).all()
+    scheduler.reschedule_all(all_ops, current_day)
 
     db.commit()
     db.refresh(op)
@@ -377,6 +372,11 @@ def advance_simulation(
         sim.current_day += days or 1
 
     _update_statuses(db, tenant_id, sim.current_day)
+
+    # Propagate any overdue awaiting_completion ops into downstream scheduled dates
+    all_ops = db.query(Operation).filter(Operation.tenant_id == tenant_id).all()
+    scheduler.reschedule_all(all_ops, sim.current_day)
+
     db.commit()
     db.refresh(sim)
     return sim

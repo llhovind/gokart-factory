@@ -80,14 +80,27 @@ def reschedule_all(ops: list["Operation"], current_day: int) -> list["Operation"
     # Build it from all ops we have; complete ops outside batch won't be in op_map.
     end_day_by_id: dict[int, int] = {}
     for op in ops:
-        if op.status == "complete" and op.scheduled_end_day is not None:
-            end_day_by_id[op.id] = op.scheduled_end_day
+        if op.status == "complete":
+            # Prefer actual_completion_day so downstream ops reflect real delays/early finishes
+            end = getattr(op, "actual_completion_day", None) or op.scheduled_end_day
+            if end is not None:
+                end_day_by_id[op.id] = end
 
     for op in ordered:
         if op.status == "complete":
             # Preserve existing schedule; record end day for dependents.
-            if op.scheduled_end_day is not None:
-                end_day_by_id[op.id] = op.scheduled_end_day
+            end = getattr(op, "actual_completion_day", None) or op.scheduled_end_day
+            if end is not None:
+                end_day_by_id[op.id] = end
+            continue
+        if op.status in ("ready", "awaiting_completion"):
+            # Don't reschedule an in-progress op — its start/end are already locked in.
+            # For awaiting ops that are overdue, project the effective end to current_day
+            # so downstream planned ops slide out accordingly.
+            end = op.scheduled_end_day or 0
+            if op.status == "awaiting_completion":
+                end = max(end, current_day)
+            end_day_by_id[op.id] = end
             continue
 
         # Earliest start = current_day, or after dependency ends (whichever is later)

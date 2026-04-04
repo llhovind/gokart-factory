@@ -42,6 +42,8 @@ class Operation(Base):
     depends_on_operation_id = Column(Integer, nullable=True)
     # Tracks how many rework loops have been applied (capped at 1)
     rework_count = Column(Integer, default=0, nullable=False)
+    # The actual day this operation was completed (may differ from scheduled_end_day)
+    actual_completion_day = Column(Integer, nullable=True)
 
 
 class InventoryItem(Base):

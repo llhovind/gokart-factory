@@ -16,7 +16,13 @@
             <span class="inline-block w-3 h-3 rounded bg-orange-400"></span> Awaiting
           </span>
           <span class="flex items-center gap-1">
+            <span class="inline-block w-3 h-3 rounded bg-orange-400 border-2 border-red-600"></span> Delayed
+          </span>
+          <span class="flex items-center gap-1">
             <span class="inline-block w-3 h-3 rounded bg-green-500"></span> Complete
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="inline-block w-3 h-3 rounded bg-green-500 border-2 border-amber-400"></span> Late
           </span>
         </div>
         <button
@@ -101,7 +107,7 @@
                 v-for="op in lane"
                 :key="op.id"
                 class="absolute rounded cursor-pointer flex items-center px-1.5 text-xs font-medium truncate transition-opacity hover:opacity-75"
-                :class="STATUS_CLASSES[op.status]"
+                :class="[STATUS_CLASSES[op.status], isOverdue(op) ? 'border-2 border-red-600' : wasLate(op) ? 'border-2 border-amber-400' : '']"
                 :style="{
                   ...barStyle(op),
                   top: (laneIndex * (LANE_HEIGHT + LANE_GAP) + 4) + 'px',
@@ -129,7 +135,13 @@
         <div class="font-semibold">{{ tooltip.op.name }}</div>
         <div class="text-gray-300">{{ tooltip.op.work_center }}</div>
         <div class="text-gray-300">Day {{ tooltip.op.scheduled_start_day }} &rarr; {{ tooltip.op.scheduled_end_day }}</div>
+        <div v-if="tooltip.op.actual_completion_day && tooltip.op.actual_completion_day !== tooltip.op.scheduled_end_day" class="text-yellow-300">
+          Completed Day {{ tooltip.op.actual_completion_day }}
+        </div>
         <div class="text-gray-300 capitalize">{{ tooltip.op.status.replace(/_/g, ' ') }}</div>
+        <div v-if="isOverdue(tooltip.op)" class="text-red-400 font-semibold">
+          Delayed {{ simStore.currentDay - tooltip.op.scheduled_end_day }} day(s)
+        </div>
       </div>
     </Teleport>
   </div>
@@ -164,10 +176,24 @@ const scheduledOps = computed(() =>
   )
 )
 
+function isOverdue(op) {
+  return op.status === 'awaiting_completion' && simStore.currentDay > op.scheduled_end_day
+}
+
+function wasLate(op) {
+  return op.status === 'complete' && op.actual_completion_day > op.scheduled_end_day
+}
+
+function effectiveEndDay(op) {
+  if (op.status === 'complete' && op.actual_completion_day)
+    return op.actual_completion_day
+  return isOverdue(op) ? simStore.currentDay : op.scheduled_end_day
+}
+
 const maxDay = computed(() =>
   scheduledOps.value.length === 0
     ? 20
-    : Math.max(20, ...scheduledOps.value.map(op => op.scheduled_end_day))
+    : Math.max(20, simStore.currentDay, ...scheduledOps.value.map(op => effectiveEndDay(op)))
 )
 
 const dayTicks = computed(() =>
@@ -190,8 +216,8 @@ const woRows = computed(() => {
       let placed = false
       for (const lane of lanes) {
         const overlaps = lane.some(e =>
-          op.scheduled_start_day < e.scheduled_end_day &&
-          op.scheduled_end_day   > e.scheduled_start_day
+          op.scheduled_start_day < effectiveEndDay(e) &&
+          effectiveEndDay(op)    > e.scheduled_start_day
         )
         if (!overlaps) { lane.push(op); placed = true; break }
       }
@@ -213,9 +239,10 @@ function rowHeight(row) {
 }
 
 function barStyle(op) {
+  const endDay = effectiveEndDay(op)
   return {
     left:  `${(op.scheduled_start_day - 1) * DAY_WIDTH}px`,
-    width: `${(op.scheduled_end_day - op.scheduled_start_day + 1) * DAY_WIDTH - 2}px`,
+    width: `${(endDay - op.scheduled_start_day + 1) * DAY_WIDTH - 2}px`,
   }
 }
 
