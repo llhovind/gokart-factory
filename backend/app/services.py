@@ -18,11 +18,11 @@ from . import scheduler
 
 _INVENTORY_SEED = [
     # (category, name, requires_pre_assembly_test, receive_duration_days, qty_on_hand)
-    ("frame",   "Standard",            False, None, 3),
+    ("frame",   "Standard",            False, None, 6),
     ("frame",   "Reinforced Off-Road", True,  None, 0),
-    ("motor",   "Standard Motor",      False, 1,    3),
+    ("motor",   "Standard Motor",      False, 1,    6),
     ("motor",   "High Torque Motor",   True,  2,    0),
-    ("battery", "Standard",            False, None, 3),
+    ("battery", "Standard",            False, None, 6),
     ("battery", "Competition",         True,  None, 0),
     ("finish",  "Black Powder Coat",   False, None, None),  # infinite
     ("finish",  "Red Powder Coat",     False, None, None),  # infinite
