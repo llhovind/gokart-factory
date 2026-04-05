@@ -1,0 +1,42 @@
+#!/sbin/openrc-run
+
+name="gokart-factory"
+description="GoKart Factory simulation app (FastAPI/uvicorn)"
+
+APP_DIR="/opt/gokart-factory/backend"
+VENV="/opt/gokart-factory/backend/venv"
+UVICORN="${VENV}/bin/uvicorn"
+
+: ${HOST:=0.0.0.0}
+: ${PORT:=8000}
+: ${USER:=gokart}
+: ${GROUP:=gokart}
+: ${FRONTEND_DIST_PATH:=/opt/gokart-factory/frontend/dist}
+: ${PIDFILE:=/run/${RC_SVCNAME}.pid}
+: ${LOGFILE:=/var/log/${RC_SVCNAME}.log}
+
+command="${UVICORN}"
+command_args="app.main:app --host ${HOST} --port ${PORT}"
+command_user="${USER}:${GROUP}"
+command_background=true
+
+directory="${APP_DIR}"
+
+pidfile="${PIDFILE}"
+
+output_log="${LOGFILE}"
+error_log="${LOGFILE}"
+
+export PYTHONUNBUFFERED=1
+export FRONTEND_DIST_PATH="${FRONTEND_DIST_PATH}"
+
+depend() {
+    need net
+    use logger
+    after firewall
+}
+
+start_pre() {
+    checkpath --file --owner "${USER}:${GROUP}" --mode 0644 "${LOGFILE}"
+    checkpath --directory --owner "${USER}:${GROUP}" --mode 0755 /run
+}

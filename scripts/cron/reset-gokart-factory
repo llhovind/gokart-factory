@@ -1,0 +1,5 @@
+#! /bin/sh
+
+ADMIN_KEY=$(grep '^ADMIN_KEY=' /opt/gokart-factory/backend/.env | cut -d '=' -f2- | tr -d "'\"" )
+
+curl -X POST http://localhost:8000/api/admin/flush -H "X-Admin-Key: ${ADMIN_KEY}"
