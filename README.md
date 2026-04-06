@@ -1,6 +1,29 @@
 # GoKart Factory
 
-A manufacturing simulation for a custom electric go-kart factory.
+![gokart-factory](./gokart-factory.png "GoKart Factory")
+
+A (mostly) AI generated manufacturing simulation for a custom electric go-kart factory.
+
+> Have a look at the [**LIVE DEMO**](http://www.hovind.com/demos/gokart-factory)
+
+
+### AI Generated
+I wanted to make another demo for my site. I had worked on a manufacturing tracking (MRP type) app recently and thought it might make a good demo.
+
+Due to the complexity I wanted to see how well AI could handle a project like this.
+
+This project started with the "prompt". Since it was going to be a demo of AI code, it seemed best to speak in an AI language. Hence, an AI chat was used to describe the project, fine tune requirements, and generate the prompt. The prompt can be seen in the file 'project.prompt'
+
+Once the prompt was generated it was fed to Claude Code. And in one pass there was a working demo. Claude interpreted the prompt as a non-production project. This resulted in some things being hard coded. Once Claude was instructed to build it as if it would be for production, Claude corrected those items and moved them into the database. The outcome was as requested, no errors. The Initial Commit is what was generated from the prompt, untouched.
+
+The Timelines were added by chatting with Claude. Again, they came out correctly, first pass. The only thing changed was the addition of some styling. Claude couldn't "see" what would make it easier for a human to view.
+
+Oddly, the ICQ stage was not displayed in the Work Centers. It was properly handled in the DB and the Scheduler, it just wasn't visible which could cause some confusion for a User. Once this was pointed out Claude corrected that quickly.
+
+Aside from some cosmetic items, the code is what Claude output. You can crtitque it. As can be seen from my other projects, Claude structured some things differently than I would have. A better prompt would have guided it more toward my style of coding. But, the code is discernable and well commented. I have had to maintain much worse.
+
+What you're looking at took less than two (2) work days, to go from concept to deployable code. "That'll do Claude, that'll do."
+
 
 ## Tech Stack
 
