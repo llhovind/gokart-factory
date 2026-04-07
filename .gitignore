@@ -33,3 +33,6 @@ Thumbs.db
 *.swp
 
 *.tar.gz
+
+# e2e test
+test-results
