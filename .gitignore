@@ -36,3 +36,7 @@ Thumbs.db
 
 # e2e test
 test-results
+
+# pytest / coverage
+.coverage
+htmlcov/
