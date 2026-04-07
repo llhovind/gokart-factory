@@ -6,6 +6,8 @@
         <span class="text-2xl">⚡</span>
         <h1 class="text-xl font-bold tracking-tight">GoKart Factory</h1>
       </div>
+      <a href="https://github.com/llhovind/gokart-factory" target="_blank" class="githubLink"
+        title="See Me on GitHub"><img src="./assets/github-mark-white.svg" alt="GitHub" class="w-7 h-7" /></a>
       <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">
         Day {{ simStore.currentDay }}
       </span>
