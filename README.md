@@ -24,6 +24,7 @@ Aside from some cosmetic items, the code is what Claude output. You can crtitque
 
 What you're looking at took less than two (2) work days, to go from concept to deployable code. "That'll do Claude, that'll do."
 
+> Update: adding tests was an additional day's work.
 
 ## Tech Stack
 
@@ -94,6 +95,17 @@ gokart-factory/
 │   │   ├── services.py    # Business logic
 │   │   ├── scheduler.py   # Capacity-aware dependency scheduling
 │   │   └── auth.py        # JWT generation and validation
+│   ├── tests/
+│   │   ├── conftest.py             # Fixtures: in-memory DB, auth client
+│   │   ├── test_scheduler.py       # Pure unit tests (no DB)
+│   │   ├── test_services.py        # Service layer tests
+│   │   ├── test_routes_auth.py     # Auth and admin endpoint tests
+│   │   ├── test_routes_simulation.py
+│   │   ├── test_routes_workorders.py
+│   │   ├── test_routes_operations.py
+│   │   ├── test_routes_inventory.py
+│   │   └── test_multi_tenant.py    # Tenant isolation tests
+│   ├── pytest.ini
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
@@ -109,6 +121,45 @@ gokart-factory/
 │   │       ├── FactoryTimeline.vue
 │   │       └── StatusBadge.vue
 │   └── ...
+├── e2e/
+│   └── tests/             # Playwright end-to-end tests
+├── scripts/
+│   ├── OpenRC/            # OpenRC service file
+│   └── cron/              # DB reset cron script
 ├── Dockerfile
 └── docker-compose.yml
+```
+
+---
+
+## Testing
+
+### Backend (pytest)
+
+```bash
+cd backend
+source venv/bin/activate
+pip install -r requirements.txt
+pytest
+```
+
+Runs 103 tests across unit, integration, and end-to-end API layers with coverage reporting. A coverage HTML report is written to `backend/htmlcov/`.
+
+```bash
+venv/bin/pytest -v                              # verbose output
+venv/bin/pytest tests/test_scheduler.py        # just the scheduler unit tests
+venv/bin/pytest --cov-report=html && open htmlcov/index.html   # visual coverage report
+```
+
+
+### E2E (Playwright)
+
+Requires the full stack running locally (backend on `:8000`, frontend on `:5173`).
+
+```bash
+cd e2e
+npm install
+
+npm test                # headless
+npm run test:headed     # with browser visible
 ```
